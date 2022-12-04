@@ -1,0 +1,115 @@
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.ArrayList;
+
+public class TCPServer {
+    static Integer numberOfClients = 0;
+    static ArrayList<Socket> clients = new ArrayList<>();
+
+    public static class ServerThread extends Thread {
+        private final Socket socket;
+
+        public ServerThread(Socket socket) {
+            super();
+            this.socket = socket;
+        }
+
+        public void run() {
+            try {
+                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+                System.out.println(clients);
+                synchronized (numberOfClients) {
+                    numberOfClients++;
+                }
+                System.out.println("---------------------------------Task1---------------------------------");
+                StringBuilder answer = new StringBuilder();
+                {
+                    //Treść zadania 1
+                }
+                System.out.println(answer);
+                out.println(answer);
+                System.out.println(clients);
+                System.out.println("---------------------------------Task2---------------------------------");
+                System.out.println("Number of clients " + numberOfClients);
+                out.println(numberOfClients);
+                System.out.println("---------------------------------Task3---------------------------------");
+                int answer2 = 0;
+                {
+                    //Treść zadania 3
+                }
+                synchronized (numberOfClients) {
+                    numberOfClients++;
+                }
+                out.println(answer2);
+                //Do tąd wątek dziłający w tym zadaniu może nie przyjść
+                //Wiec najpierw liczysz, potym wysyłasz odpowiedz (po odpowiedzi może być uśpiony (.sleep(forewer))
+                System.out.println("---------------------------------Task4---------------------------------");
+                System.out.println("Number of clients " + numberOfClients);
+                out.println(numberOfClients);
+                System.out.println("---------------------------------Task5---------------------------------");
+                String input;
+                do {
+                    input = in.readLine();
+                } while (input == null);
+                System.out.println(input); //final flag
+                System.out.println("----------===----------All Tasks Ended----------===----------");
+            } catch (IOException e1) {
+                // do nothing
+                System.out.println('1');
+            }
+
+            try {
+                socket.close();
+            } catch (IOException e) {
+                // do nothing
+                System.out.println('2');
+            }
+        }
+    }
+
+    public void listenSocket(int port) {
+        ServerSocket server = null;
+        Socket client = null;
+        try {
+            server = new ServerSocket(port);
+//            server = new ServerSocket(port, 1, new InetSocketAddress("172.23.67.147", port));
+        } catch (IOException e) {
+            System.out.println("Could not listen");
+            System.exit(-1);
+        }
+        System.out.println("Server IP: " + server.getInetAddress());
+        System.out.println("Server listens on port: " + server.getLocalPort());
+        while (true) {
+            try {
+                client = server.accept();
+                clients.add(client);
+            } catch (IOException e) {
+                System.out.println("Accept failed");
+                System.exit(-1);
+            }
+            //New Thread to every client
+            (new ServerThread(client)).start();
+        }
+
+    }
+
+    public static void main(String[] args) {
+        if (args.length < 1) {
+            System.out.println("Too few parameters:");
+            System.out.println("\tGot - " + args.length);
+            System.out.println("\tExpected - 1 and more");
+            return;
+        }
+        //Server port
+        int port = Integer.parseInt(args[0]);
+        TCPServer server = new TCPServer();
+        server.listenSocket(port);
+    }
+}
